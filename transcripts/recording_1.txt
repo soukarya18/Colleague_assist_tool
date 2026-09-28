@@ -1,0 +1,48 @@
+[0.00s --> 4.00s]  Hello, hello, yeah, this is to him from TCS
+[4.72s --> 12.42s]  How can I help you? Yeah, I need some information regarding my request. I have raised a request for Jira and Confluence page
+[15.12s --> 19.52s]  Okay, I will help you but before this
+[20.00s --> 25.22s]  We have some verification process. Can we do it? Yeah, so
+[25.22s --> 29.22s]  Okay, so can I have your email ID?
+[29.22s --> 33.22s]  Yeah, so my email ID is
+[33.22s --> 37.22s]  Deepak.cha at the rate gmail.com
+[39.22s --> 41.22s]  Okay
+[41.22s --> 45.22s]  Let give me some seconds
+[49.22s --> 53.22s]  Okay, so can I have your
+[53.22s --> 57.22s]  Can I have your first name and last name?
+[57.22s --> 61.22s]  Yeah, my first name is Deepak and my last name is Cha
+[61.22s --> 65.22s]  Okay, can you spell it out for me?
+[65.22s --> 69.22s]  Yeah, it's DEEPAKJHA
+[69.22s --> 73.22s]  Okay, I mean
+[73.22s --> 77.22s]  DEE, right? Yeah
+[77.22s --> 81.22s]  PAK, right? Yeah
+[81.22s --> 85.22s]  PAKJHA
+[85.22s --> 89.22s]  Okay, so can I have your
+[89.22s --> 93.22s]  Manager name? Yeah, my manager name is
+[93.22s --> 97.22s]  Subhadeep Pathak
+[97.22s --> 101.22s]  Okay, let me
+[101.22s --> 105.22s]  Verify this
+[105.22s --> 109.22s]  Okay, so
+[109.22s --> 113.22s]  There is another authentication
+[113.22s --> 117.22s]  Process, like can you type in any browser
+[117.22s --> 121.22s]  Reset.global.com
+[121.22s --> 125.22s]  Yeah, sure
+[125.22s --> 129.22s]  Okay
+[133.22s --> 137.22s]  Okay, so what can you see there? Yeah, I have
+[137.22s --> 141.22s]  Entered my mail and I have already approved the
+[141.22s --> 145.22s]  Authenticated request, now you can verify this
+[149.22s --> 153.22s]  Okay, can I take one minute for
+[153.22s --> 157.22s]  This verification process? Yeah, sure
+[157.22s --> 161.22s]  Okay, so your call on behold
+[171.22s --> 175.22s]  Okay, your authentication has been completed
+[175.22s --> 179.22s]  So
+[179.22s --> 183.22s]  Yeah, so actually I have
+[183.22s --> 187.22s]  Concerned regarding my request
+[187.22s --> 191.22s]  I have raised a RITM request two days ago and I want
+[191.22s --> 195.22s]  To know the status of my request, I have raised request more
+[195.22s --> 199.22s]  The Chira and Confluence page
+[199.22s --> 203.22s]  It is pending with your manager approval
+[203.22s --> 207.22s]  You can ask your manager to approve it
+[207.22s --> 211.22s]  Then it will be resolved, okay
+[211.22s --> 215.22s]  Okay, thank you. Okay, thanks. Is there anything
+[215.22s --> 219.22s]  For me? No, no
+[219.22s --> 223.22s]  So can I close the ticket? Yeah

@@ -1,0 +1,28 @@
+[0.00s --> 4.00s]  Thank you for calling Marthas Flowers Town, Mississippi.
+[4.00s --> 8.00s]  Hello, I'd like to order flowers, and I think you have what I'm looking for.
+[8.00s --> 11.00s]  I'd be happy to take care of your order. May I have your name, please?
+[11.00s --> 13.00s]  Randall Thomas.
+[13.00s --> 16.00s]  Randall Thomas? Can you spell that for me?
+[16.00s --> 23.00s]  Randall, R-A-N-C-A-L-L, Promise, D-H-O, and N.
+[23.00s --> 28.00s]  Thank you for that information, Randall. May I have your home or office number or area code first?
+[28.00s --> 34.00s]  409-866-5088
+[34.00s --> 41.00s]  That's 409-866-5088. Do you have a fax number or email address?
+[41.00s --> 47.00s]  My email is Randall.Thomas at gmail.com
+[47.00s --> 52.00s]  Randall.Thomas at gmail.com. May I have your shipping address?
+[52.00s --> 54.00s]  6800
+[54.00s --> 61.00s]  Gladys Avenue, Beaumont, Texas, zip code 77706
+[61.00s --> 67.00s]  Gladys Avenue, Beaumont, Texas, zip code 77706
+[67.00s --> 71.00s]  Thank you for the information. What products are you interested in purchasing?
+[71.00s --> 74.00s]  Red roses, probably a dozen.
+[74.00s --> 77.00s]  One dozen of red roses? Do you want long stems?
+[77.00s --> 78.00s]  Sure.
+[78.00s --> 82.00s]  Alright, Randall, let me process your order. One moment please.
+[82.00s --> 84.00s]  Okay.
+[85.00s --> 91.00s]  Randall, we are ordering one dozen long stems of red roses. The total amount of your order is $40.
+[91.00s --> 94.00s]  And it will be shipped to your address within 24 hours.
+[94.00s --> 97.00s]  How soon can you deliver my roses again?
+[97.00s --> 99.00s]  Within 24 hours.
+[99.00s --> 100.00s]  Okay, no problem.
+[100.00s --> 102.00s]  Is there anything else I can help you with?
+[102.00s --> 104.00s]  That's all for now, thanks.
+[104.00s --> 109.00s]  No problem, Randall. Thank you for calling Martha's Florist. Have a nice day.

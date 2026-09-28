@@ -1,0 +1,5 @@
+faster-whisper
+python-dotenv
+sentence-transformers
+faiss-cpu
+openai

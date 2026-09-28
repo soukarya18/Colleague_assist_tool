@@ -1,0 +1,70 @@
+{
+    "recording": "recording_1",
+    "metrics": [
+        {
+            "name": "email",
+            "metric_type": "Fatal",
+            "weight": 5.0,
+            "result": "PASS",
+            "score": 5.0,
+            "justification": "The agent asked for the customer's email ID, which satisfies the criteria.",
+            "evidence": "Okay, so can I have your email ID?",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 0,
+                    "distance": 1.4462193250656128,
+                    "text": "[0.00s --> 4.00s]  Hello, hello, yeah, this is to him from TCS\n[4.72s --> 12.42s]  How can I help you? Yeah, I need some information regarding my request. I have raised a request for Jira and Confluence page\n[15.12s --> 19.52s]  Okay, I will help you but before this\n[20.00s --> 25.22s]  We have some verification process. Can we do it? Yeah, so\n[25.22s --> 29.22s]  Okay, so can I have your email ID?\n[29.22s --> 33.22s]  Yeah, so my email ID is\n[33.22s --> 37.22s]  Deepak.cha at the rate gmail.com"
+                },
+                {
+                    "chunk_id": 3,
+                    "distance": 1.6011962890625,
+                    "text": "n you see there? Yeah, I have\n[137.22s --> 141.22s]  Entered my mail and I have already approved the\n[141.22s --> 145.22s]  Authenticated request, now you can verify this\n[149.22s --> 153.22s]  Okay, can I take one minute for\n[153.22s --> 157.22s]  This verification process? Yeah, sure\n[157.22s --> 161.22s]  Okay, so your call on behold\n[171.22s --> 175.22s]  Okay, your authentication has been completed\n[175.22s --> 179.22s]  So\n[179.22s --> 183.22s]  Yeah, so actually I have\n[183.22s --> 187.22"
+                }
+            ]
+        },
+        {
+            "name": "first and last name",
+            "metric_type": "fatal",
+            "weight": 4.0,
+            "result": "PASS",
+            "score": 4.0,
+            "justification": "The agent directly asked for the customer's first and last name, which satisfies the criteria.",
+            "evidence": "Can I have your first name and last name?",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 0,
+                    "distance": 1.5770959854125977,
+                    "text": "[0.00s --> 4.00s]  Hello, hello, yeah, this is to him from TCS\n[4.72s --> 12.42s]  How can I help you? Yeah, I need some information regarding my request. I have raised a request for Jira and Confluence page\n[15.12s --> 19.52s]  Okay, I will help you but before this\n[20.00s --> 25.22s]  We have some verification process. Can we do it? Yeah, so\n[25.22s --> 29.22s]  Okay, so can I have your email ID?\n[29.22s --> 33.22s]  Yeah, so my email ID is\n[33.22s --> 37.22s]  Deepak.cha at the rate gmail.com"
+                },
+                {
+                    "chunk_id": 1,
+                    "distance": 1.6131521463394165,
+                    "text": "\n[39.22s --> 41.22s]  Okay\n[41.22s --> 45.22s]  Let give me some seconds\n[49.22s --> 53.22s]  Okay, so can I have your\n[53.22s --> 57.22s]  Can I have your first name and last name?\n[57.22s --> 61.22s]  Yeah, my first name is Deepak and my last name is Cha\n[61.22s --> 65.22s]  Okay, can you spell it out for me?\n[65.22s --> 69.22s]  Yeah, it's DEEPAKJHA\n[69.22s --> 73.22s]  Okay, I mean\n[73.22s --> 77.22s]  DEE, right? Yeah\n[77.22s --> 81.22s]  PAK, right? Yeah\n[81.22s --> 85.22s]  PAKJHA\n[85.22s"
+                }
+            ]
+        },
+        {
+            "name": "shipping address",
+            "metric_type": "non-fatal",
+            "weight": 2.0,
+            "result": "FAIL",
+            "score": 0.0,
+            "justification": "The transcript does not contain any evidence that the agent asked for the shipping address.",
+            "evidence": "There are no statements in the provided transcript indicating that the agent requested the customer's shipping address.",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 5,
+                    "distance": 1.4809603691101074,
+                    "text": "[215.22s --> 219.22s]  For me? No, no\n[219.22s --> 223.22s]  So can I close the ticket? Yeah\n"
+                },
+                {
+                    "chunk_id": 3,
+                    "distance": 1.5809578895568848,
+                    "text": "n you see there? Yeah, I have\n[137.22s --> 141.22s]  Entered my mail and I have already approved the\n[141.22s --> 145.22s]  Authenticated request, now you can verify this\n[149.22s --> 153.22s]  Okay, can I take one minute for\n[153.22s --> 157.22s]  This verification process? Yeah, sure\n[157.22s --> 161.22s]  Okay, so your call on behold\n[171.22s --> 175.22s]  Okay, your authentication has been completed\n[175.22s --> 179.22s]  So\n[179.22s --> 183.22s]  Yeah, so actually I have\n[183.22s --> 187.22"
+                }
+            ]
+        }
+    ],
+    "total_score": 81.81818181818183,
+    "maximum_score": 11.0
+}

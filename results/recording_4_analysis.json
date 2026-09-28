@@ -1,0 +1,91 @@
+{
+    "recording": "recording_4",
+    "metrics": [
+        {
+            "name": "email",
+            "metric_type": "Fatal",
+            "weight": 5.0,
+            "result": "FAIL",
+            "score": 0.0,
+            "justification": "The transcript does not show that the agent asked for the customer's email address.",
+            "evidence": "There is no statement in the provided transcript indicating that the agent asked for the customer's email address.",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 4,
+                    "distance": 1.7772185802459717,
+                    "text": "oah, Noah, I don't think you do. We've been at this for over 30 minutes, going around in circles.\n[121.00s --> 125.00s]  I'd like to speak to your supervisor. I obviously won't get any help from you.\n"
+                },
+                {
+                    "chunk_id": 0,
+                    "distance": 1.8000930547714233,
+                    "text": "[0.00s --> 14.00s]  Hi Rachel, I'd like to know how to use this car Bluetooth headset I recently purchased\n[14.00s --> 15.00s]  from your store.\n[15.00s --> 20.00s]  Sure ma'am, I can help you out with that, but before anything else, may I have your\n[20.00s --> 22.00s]  name so that I can address you properly?\n[22.00s --> 24.00s]  Yes, this is Meredith Blake.\n[24.00s --> 27.00s]  Okay, thank you for that Mrs. Blake.\n[27.00s --> 30.00s]  What exactly do you want Todd with your headset?\n[30.00s --"
+                }
+            ]
+        },
+        {
+            "name": "first and last name",
+            "metric_type": "Non-fatal",
+            "weight": 4.0,
+            "result": "PASS",
+            "score": 4.0,
+            "justification": "The agent asked for the customer's name, which is a direct request for the first and last name.",
+            "evidence": "[20.00s --> 22.00s]  Sure ma'am, I can help you out with that, but before anything else, may I have your name so that I can address you properly?",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 0,
+                    "distance": 1.456169843673706,
+                    "text": "[0.00s --> 14.00s]  Hi Rachel, I'd like to know how to use this car Bluetooth headset I recently purchased\n[14.00s --> 15.00s]  from your store.\n[15.00s --> 20.00s]  Sure ma'am, I can help you out with that, but before anything else, may I have your\n[20.00s --> 22.00s]  name so that I can address you properly?\n[22.00s --> 24.00s]  Yes, this is Meredith Blake.\n[24.00s --> 27.00s]  Okay, thank you for that Mrs. Blake.\n[27.00s --> 30.00s]  What exactly do you want Todd with your headset?\n[30.00s --"
+                },
+                {
+                    "chunk_id": 3,
+                    "distance": 1.6610722541809082,
+                    "text": "95.00s]  I already told you that I've paired the device with my phone, but I'm not sure if you get what I mean.\n[95.00s --> 99.00s]  Well yes ma'am, I understand where you're coming from.\n[99.00s --> 102.00s]  That's why I'm trying to help you, okay?\n[102.00s --> 108.00s]  Well we've already done that. I only asked a simple question. Why can't you seem to get that?\n[109.00s --> 115.00s]  Yes ma'am, I understand where you're coming from. That's why I'm trying to help you.\n[115.00s --> 121.00s]  N"
+                }
+            ]
+        },
+        {
+            "name": "shipping address",
+            "metric_type": "non-fatal",
+            "weight": 2.0,
+            "result": "FAIL",
+            "score": 0.0,
+            "justification": "The agent did not ask for the customer's shipping address.",
+            "evidence": "There is no statement in the transcript asking for the customer's shipping address.",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 3,
+                    "distance": 1.6949858665466309,
+                    "text": "95.00s]  I already told you that I've paired the device with my phone, but I'm not sure if you get what I mean.\n[95.00s --> 99.00s]  Well yes ma'am, I understand where you're coming from.\n[99.00s --> 102.00s]  That's why I'm trying to help you, okay?\n[102.00s --> 108.00s]  Well we've already done that. I only asked a simple question. Why can't you seem to get that?\n[109.00s --> 115.00s]  Yes ma'am, I understand where you're coming from. That's why I'm trying to help you.\n[115.00s --> 121.00s]  N"
+                },
+                {
+                    "chunk_id": 0,
+                    "distance": 1.7057918310165405,
+                    "text": "[0.00s --> 14.00s]  Hi Rachel, I'd like to know how to use this car Bluetooth headset I recently purchased\n[14.00s --> 15.00s]  from your store.\n[15.00s --> 20.00s]  Sure ma'am, I can help you out with that, but before anything else, may I have your\n[20.00s --> 22.00s]  name so that I can address you properly?\n[22.00s --> 24.00s]  Yes, this is Meredith Blake.\n[24.00s --> 27.00s]  Okay, thank you for that Mrs. Blake.\n[27.00s --> 30.00s]  What exactly do you want Todd with your headset?\n[30.00s --"
+                }
+            ]
+        },
+        {
+            "name": "customer satisfaction",
+            "metric_type": "fatal",
+            "weight": 5.0,
+            "result": "FAIL",
+            "score": 0.0,
+            "justification": "The transcript does not show that the agent asked for the customer's satisfaction with the support provided.",
+            "evidence": "There are no statements in the transcript indicating that the agent inquired about the customer's satisfaction with the support.",
+            "retrieved_chunks": [
+                {
+                    "chunk_id": 3,
+                    "distance": 1.7653731107711792,
+                    "text": "95.00s]  I already told you that I've paired the device with my phone, but I'm not sure if you get what I mean.\n[95.00s --> 99.00s]  Well yes ma'am, I understand where you're coming from.\n[99.00s --> 102.00s]  That's why I'm trying to help you, okay?\n[102.00s --> 108.00s]  Well we've already done that. I only asked a simple question. Why can't you seem to get that?\n[109.00s --> 115.00s]  Yes ma'am, I understand where you're coming from. That's why I'm trying to help you.\n[115.00s --> 121.00s]  N"
+                },
+                {
+                    "chunk_id": 2,
+                    "distance": 1.8556480407714844,
+                    "text": "  Yes ma'am.\n[64.00s --> 66.00s]  Okay, done.\n[66.00s --> 73.00s]  Now, please switch off your phone, then turn it on again after around 5 seconds.\n[73.00s --> 75.00s]  Switch it off and on?\n[75.00s --> 77.00s]  Yes please.\n[77.00s --> 79.00s]  Done, now what?\n[79.00s --> 82.00s]  Okay, please pair it with your phone.\n[82.00s --> 85.00s]  Okay, paired. Now what?\n[85.00s --> 88.00s]  Ma'am, is your headset working now?\n[88.00s --> 90.00s]  That's just it. I want to know how it works.\n[90.00s --> "
+                }
+            ]
+        }
+    ],
+    "total_score": 0,
+    "maximum_score": 16.0
+}

@@ -1,0 +1,20 @@
+{
+    "metrics": [
+        {
+            "name": "email",
+            "metric_type": "Fatal",
+            "criteria": [
+                "is email asked by the agent if possible to ask"
+            ],
+            "weight": 5.0
+        },
+        {
+            "name": "first and last name",
+            "metric_type": "fatal",
+            "criteria": [
+                "is the first and last name or full name of the customer asked by agent if possible to ask"
+            ],
+            "weight": 4.0
+        }
+    ]
+}

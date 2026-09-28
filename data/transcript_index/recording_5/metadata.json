@@ -1,0 +1,18 @@
+[
+    {
+        "chunk_id": 0,
+        "text": "[0.00s --> 4.00s]  Thank you for calling Marthas Flowers Town, Mississippi.\n[4.00s --> 8.00s]  Hello, I'd like to order flowers, and I think you have what I'm looking for.\n[8.00s --> 11.00s]  I'd be happy to take care of your order. May I have your name, please?\n[11.00s --> 13.00s]  Randall Thomas.\n[13.00s --> 16.00s]  Randall Thomas? Can you spell that for me?\n[16.00s --> 23.00s]  Randall, R-A-N-C-A-L-L, Promise, D-H-O, and N.\n[23.00s --> 28.00s]  Thank you for that information, Randall. May I "
+    },
+    {
+        "chunk_id": 1,
+        "text": "have your home or office number or area code first?\n[28.00s --> 34.00s]  409-866-5088\n[34.00s --> 41.00s]  That's 409-866-5088. Do you have a fax number or email address?\n[41.00s --> 47.00s]  My email is Randall.Thomas at gmail.com\n[47.00s --> 52.00s]  Randall.Thomas at gmail.com. May I have your shipping address?\n[52.00s --> 54.00s]  6800\n[54.00s --> 61.00s]  Gladys Avenue, Beaumont, Texas, zip code 77706\n[61.00s --> 67.00s]  Gladys Avenue, Beaumont, Texas, zip code 77706\n[67.00s --> 71.00s]  T"
+    },
+    {
+        "chunk_id": 2,
+        "text": "hank you for the information. What products are you interested in purchasing?\n[71.00s --> 74.00s]  Red roses, probably a dozen.\n[74.00s --> 77.00s]  One dozen of red roses? Do you want long stems?\n[77.00s --> 78.00s]  Sure.\n[78.00s --> 82.00s]  Alright, Randall, let me process your order. One moment please.\n[82.00s --> 84.00s]  Okay.\n[85.00s --> 91.00s]  Randall, we are ordering one dozen long stems of red roses. The total amount of your order is $40.\n[91.00s --> 94.00s]  And it will be shipped "
+    },
+    {
+        "chunk_id": 3,
+        "text": "to your address within 24 hours.\n[94.00s --> 97.00s]  How soon can you deliver my roses again?\n[97.00s --> 99.00s]  Within 24 hours.\n[99.00s --> 100.00s]  Okay, no problem.\n[100.00s --> 102.00s]  Is there anything else I can help you with?\n[102.00s --> 104.00s]  That's all for now, thanks.\n[104.00s --> 109.00s]  No problem, Randall. Thank you for calling Martha's Florist. Have a nice day.\n"
+    }
+]

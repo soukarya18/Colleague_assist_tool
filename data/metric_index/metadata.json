@@ -1,0 +1,10 @@
+[
+    {
+        "metric_name": "email",
+        "criteria": "is email asked by the agent if possible to ask"
+    },
+    {
+        "metric_name": "first and last name",
+        "criteria": "is the first and last name or full name of the customer asked by agent if possible to ask"
+    }
+]
