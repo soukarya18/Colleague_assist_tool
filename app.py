@@ -1,15 +1,28 @@
 from __future__ import annotations
+
+import base64
+import binascii
 import dash
 import json
-import re 
+import logging
+import os
+import re
+import webbrowser
+
 from datetime import datetime
 from pathlib import Path
+from threading import RLock, Thread, Timer
 from typing import Any
+from uuid import uuid4
 
-from dash import Dash, Input, Output, State, dcc, html, dash_table, no_update
+from dash import Dash, Input, Output, State, dcc, html, dash_table
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
+
 from metric_manager import load_metrics, save_metrics
+from transcriber import transcribe_audio, save_transcript
+from transcript_index import build_transcript_index
+from evaluator import evaluate_transcript
 
 
 
@@ -18,6 +31,30 @@ from metric_manager import load_metrics, save_metrics
 APP_NAME = "Colleague Assist"
 RESULTS_DIR = Path("results")
 TRANSCRIPTS_DIR = Path("transcripts")
+UPLOADS_DIR = Path("uploads")
+
+ALLOWED_AUDIO_EXTENSIONS = {
+    ".wav",
+    ".mp3",
+    ".m4a",
+    ".flac",
+}
+
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------
+# Batch processing state
+# ---------------------------------------------------------
+# This is intentionally kept in memory for the local/POC Dash app.
+# The UI polls this state every second while the worker processes
+# recordings sequentially.
+BATCH_STATE_LOCK = RLock()
+
+BATCH_STATE: dict[str, Any] = {
+    "running": False,
+    "message": "",
+    "jobs": [],
+}
 
 
 def load_results() -> list[dict[str, Any]]:
@@ -57,7 +94,10 @@ def load_results() -> list[dict[str, Any]]:
                         duration_seconds
                     ) , 
                     
-                    "call_type": "Customer Support",
+                    "call_type": data.get(
+                        "call_type",
+                        "Customer Support",
+                    ),
                     "result_file": result_file,
                     "transcript_file": TRANSCRIPTS_DIR / f"{recording}.txt",
                 }
@@ -337,67 +377,487 @@ def analytics_page() -> Any:
     )
 
 
+def _get_batch_jobs_snapshot() -> list[dict[str, Any]]:
+    """
+    Return a safe copy of the current batch queue.
+    """
+    with BATCH_STATE_LOCK:
+        return [
+            dict(job)
+            for job in BATCH_STATE["jobs"]
+        ]
+
+
+def get_batch_rows() -> list[dict[str, str]]:
+    """
+    Convert the internal batch state into rows for the Dash table.
+    """
+    jobs = _get_batch_jobs_snapshot()
+
+    return [
+        {
+            "File Name": str(job["filename"]),
+            "Status": str(job["status"]),
+            "Progress": f"{int(job.get('progress', 0))}%",
+            "Duration": str(job.get("duration", "—")),
+        }
+        for job in jobs
+    ]
+
+
+def _update_batch_job(
+    job_id: str,
+    **changes: Any,
+) -> None:
+    """
+    Update one job safely inside the batch queue.
+    """
+    with BATCH_STATE_LOCK:
+        for job in BATCH_STATE["jobs"]:
+            if job["job_id"] == job_id:
+                job.update(changes)
+                return
+
+
+def _save_uploaded_audio(
+    contents: str,
+    filename: str,
+) -> Path:
+    """
+    Decode a Dash upload and save it into the local uploads folder.
+
+    The original filename is kept where possible. If a file with the
+    same name already exists, a UUID suffix is added to avoid collision.
+    """
+    if not contents or "," not in contents:
+        raise ValueError("Invalid uploaded file data.")
+
+    safe_filename = Path(filename).name
+    extension = Path(safe_filename).suffix.lower()
+
+    if extension not in ALLOWED_AUDIO_EXTENSIONS:
+        raise ValueError(
+            f"Unsupported file type: {extension or 'unknown'}. "
+            "Allowed: WAV, MP3, M4A, FLAC."
+        )
+
+    header, encoded_data = contents.split(",", 1)
+
+    if not header.startswith("data:"):
+        raise ValueError("Invalid upload format.")
+
+    try:
+        file_bytes = base64.b64decode(
+            encoded_data,
+            validate=True,
+        )
+    except (ValueError, binascii.Error) as exc:
+        raise ValueError(
+            "Could not decode the uploaded file."
+        ) from exc
+
+    UPLOADS_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    stored_path = UPLOADS_DIR / safe_filename
+
+    if stored_path.exists():
+        stem = stored_path.stem
+        stored_path = (
+            UPLOADS_DIR
+            / f"{stem}_{uuid4().hex[:8]}{extension}"
+        )
+
+    stored_path.write_bytes(file_bytes)
+
+    return stored_path
+
+
+def _attach_batch_metadata(
+    result_path: str | Path,
+    call_type: str,
+) -> None:
+    """
+    Store the call type selected in the UI inside the generated
+    analysis JSON. The evaluator itself does not use call type.
+    """
+    path = Path(result_path)
+
+    try:
+        with path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
+            data = json.load(file)
+
+        data["call_type"] = call_type
+
+        with path.open(
+            "w",
+            encoding="utf-8",
+        ) as file:
+            json.dump(
+                data,
+                file,
+                indent=4,
+            )
+
+    except (
+        OSError,
+        json.JSONDecodeError,
+        TypeError,
+        ValueError,
+    ):
+        logger.exception(
+            "Could not attach batch metadata to %s",
+            path,
+        )
+
+
+def _process_one_batch_job(
+    job: dict[str, Any],
+) -> None:
+    """
+    Process exactly one recording using the existing backend pipeline.
+
+    Flow:
+        audio
+          -> transcribe
+          -> save transcript
+          -> build FAISS index
+          -> evaluate transcript
+          -> save result JSON
+    """
+    job_id = str(job["job_id"])
+    audio_path = Path(job["saved_path"])
+
+    try:
+        # ---------------------------------------------
+        # STEP 1: TRANSCRIPTION
+        # ---------------------------------------------
+        _update_batch_job(
+            job_id,
+            status="Transcribing",
+            progress=20,
+        )
+
+        logger.info(
+            "Transcribing batch recording: %s",
+            audio_path,
+        )
+
+        segments = transcribe_audio(
+            str(audio_path)
+        )
+
+        transcript_path = save_transcript(
+            segments,
+            str(audio_path),
+        )
+
+        # ---------------------------------------------
+        # STEP 2: INDEX + EVALUATION
+        # ---------------------------------------------
+        _update_batch_job(
+            job_id,
+            status="Evaluating",
+            progress=60,
+            transcript_path=str(transcript_path),
+        )
+
+        logger.info(
+            "Building transcript index: %s",
+            transcript_path,
+        )
+
+        build_transcript_index(
+            transcript_path
+        )
+
+        logger.info(
+            "Evaluating transcript: %s",
+            transcript_path,
+        )
+
+        result_path = evaluate_transcript(
+            transcript_path
+        )
+
+        _attach_batch_metadata(
+            result_path,
+            str(
+                job.get(
+                    "call_type",
+                    "Customer Support",
+                )
+            ),
+        )
+
+        # ---------------------------------------------
+        # STEP 3: COMPLETED
+        # ---------------------------------------------
+        duration_seconds = get_transcript_duration(
+            Path(transcript_path)
+        )
+
+        _update_batch_job(
+            job_id,
+            status="Completed",
+            progress=100,
+            duration=format_duration(
+                duration_seconds
+            ),
+            duration_seconds=duration_seconds,
+            result_path=str(result_path),
+        )
+
+        logger.info(
+            "Batch recording completed: %s -> %s",
+            audio_path.name,
+            result_path,
+        )
+
+    except Exception as exc:
+        logger.exception(
+            "Batch recording failed: %s",
+            audio_path,
+        )
+
+        _update_batch_job(
+            job_id,
+            status="Failed",
+            progress=0,
+            duration="—",
+            error=str(exc),
+        )
+
+
+def _run_batch_queue() -> None:
+    """
+    Process all currently queued recordings strictly one at a time.
+    """
+    with BATCH_STATE_LOCK:
+        queue = [
+            dict(job)
+            for job in BATCH_STATE["jobs"]
+            if job.get("status") == "Queued"
+        ]
+
+    completed = 0
+    failed = 0
+
+    try:
+        for job in queue:
+            _process_one_batch_job(job)
+
+            with BATCH_STATE_LOCK:
+                matching_job = next(
+                    (
+                        item
+                        for item in BATCH_STATE["jobs"]
+                        if item["job_id"] == job["job_id"]
+                    ),
+                    None,
+                )
+
+                if matching_job and matching_job.get("status") == "Completed":
+                    completed += 1
+                else:
+                    failed += 1
+
+                BATCH_STATE["message"] = (
+                    f"Processed {completed + failed} of {len(queue)} recordings "
+                    f"({completed} completed, {failed} failed)."
+                )
+
+    finally:
+        with BATCH_STATE_LOCK:
+            BATCH_STATE["running"] = False
+            BATCH_STATE["message"] = (
+                "Batch processing completed. "
+                f"{completed} completed, {failed} failed."
+            )
+
+
+def _start_batch_thread() -> None:
+    """
+    Start the queue in a background thread so the Dash request is not blocked.
+    """
+    worker = Thread(
+        target=_run_batch_queue,
+        name="batch-processing-worker",
+        daemon=True,
+    )
+
+    worker.start()
+
+
 def batch_page() -> Any:
     return page_shell(
         [
+            # Refresh the queue table every second while processing.
+            dcc.Interval(
+                id="batch-refresh",
+                interval=1000,
+                n_intervals=0,
+            ),
+
             html.Div(
                 [
-                    html.Div("Audio Upload Area", className="section-title"),
+                    html.Div(
+                        "Audio Upload Area",
+                        className="section-title",
+                    ),
+
                     dcc.Upload(
                         id="batch-upload",
                         multiple=True,
-                        children=html.Div([
-                            html.Div("Drop call recordings here", className="upload-title"),
-                            html.Div("or click to browse · WAV · MP3 · M4A · FLAC", className="upload-subtitle"),
-                        ]),
+                        accept=".wav,.mp3,.m4a,.flac",
+                        children=html.Div(
+                            [
+                                html.Div(
+                                    "Drop call recordings here",
+                                    className="upload-title",
+                                ),
+                                html.Div(
+                                    "or click to browse · WAV · MP3 · M4A · FLAC",
+                                    className="upload-subtitle",
+                                ),
+                            ]
+                        ),
                         className="upload-box",
                     ),
+
                     html.Div(
                         [
-                            html.Div([
-                                html.Label("Auto Detect Call Type", className="field-label"),
-                                dbc.Switch(id="auto-detect-call-type", value=True, label="Enabled"),
-                            ]),
-                            html.Div([
-                                html.Label("Call Type", className="field-label"),
-                                dcc.Dropdown(
-                                    id="call-type",
-                                    options=[
-                                        {"label": "Customer Support", "value": "Customer Support"},
-                                        {"label": "Sales", "value": "Sales"},
-                                        {"label": "Complaint", "value": "Complaint"},
-                                    ],
-                                    value="Customer Support",
-                                    clearable=False,
-                                ),
-                            ]),
-                            html.Div([
-                                html.Label("Parallel Workers", className="field-label"),
-                                dcc.Dropdown(options=[1, 2, 3, 4], value=1, clearable=False),
-                            ]),
+                            html.Div(
+                                [
+                                    html.Label(
+                                        "Auto Detect Call Type",
+                                        className="field-label",
+                                    ),
+                                    dbc.Switch(
+                                        id="auto-detect-call-type",
+                                        value=True,
+                                        label="Enabled",
+                                    ),
+                                ]
+                            ),
+
+                            html.Div(
+                                [
+                                    html.Label(
+                                        "Call Type",
+                                        className="field-label",
+                                    ),
+                                    dcc.Dropdown(
+                                        id="call-type",
+                                        options=[
+                                            {
+                                                "label": "Customer Support",
+                                                "value": "Customer Support",
+                                            },
+                                            {
+                                                "label": "Sales",
+                                                "value": "Sales",
+                                            },
+                                            {
+                                                "label": "Complaint",
+                                                "value": "Complaint",
+                                            },
+                                        ],
+                                        value="Customer Support",
+                                        clearable=False,
+                                    ),
+                                ]
+                            ),
+
+                            html.Div(
+                                [
+                                    html.Label(
+                                        "Processing Workers",
+                                        className="field-label",
+                                    ),
+                                    dcc.Dropdown(
+                                        id="batch-workers",
+                                        options=[
+                                            {
+                                                "label": "1 worker",
+                                                "value": 1,
+                                            },
+                                        ],
+                                        value=1,
+                                        clearable=False,
+                                        disabled=True,
+                                    ),
+                                    html.Div(
+                                        "Sequential processing only",
+                                        className="field-hint",
+                                    ),
+                                ]
+                            ),
                         ],
                         className="three-column",
                     ),
-                    dbc.Button("START BATCH PROCESSING", id="start-batch", className="primary-btn"),
-                    html.Div(id="batch-message", className="status-message"),
+
+                    dbc.Button(
+                        "START BATCH PROCESSING",
+                        id="start-batch",
+                        className="primary-btn",
+                    ),
+
+                    html.Div(
+                        id="batch-message",
+                        className="status-message",
+                    ),
                 ],
                 className="panel",
             ),
-            html.Div([
-                html.Div("Queue", className="section-title"),
-                dash_table.DataTable(
-                    id="batch-table",
-                    columns=[
-                        {"name": "File Name", "id": "File Name"},
-                        {"name": "Status", "id": "Status"},
-                        {"name": "Progress", "id": "Progress"},
-                        {"name": "Duration", "id": "Duration"},
-                    ],
-                    data=[],
-                    style_cell={"padding": "12px", "border": "none"},
-                    style_header={"fontWeight": "700", "border": "none"},
-                ),
-            ], className="panel"),
+
+            html.Div(
+                [
+                    html.Div(
+                        "Queue",
+                        className="section-title",
+                    ),
+                    dash_table.DataTable(
+                        id="batch-table",
+                        columns=[
+                            {
+                                "name": "File Name",
+                                "id": "File Name",
+                            },
+                            {
+                                "name": "Status",
+                                "id": "Status",
+                            },
+                            {
+                                "name": "Progress",
+                                "id": "Progress",
+                            },
+                            {
+                                "name": "Duration",
+                                "id": "Duration",
+                            },
+                        ],
+                        data=get_batch_rows(),
+                        style_table={
+                            "overflowX": "auto",
+                        },
+                        style_cell={
+                            "padding": "12px",
+                            "border": "none",
+                        },
+                        style_header={
+                            "fontWeight": "700",
+                            "border": "none",
+                        },
+                    ),
+                ],
+                className="panel",
+            ),
         ]
     )
 
@@ -1091,17 +1551,185 @@ def delete_selected_metric(
 
 
 @app.callback(
+    Output("batch-table", "data"),
     Output("batch-message", "children"),
+    Output("start-batch", "disabled"),
+    Input("batch-upload", "contents"),
     Input("start-batch", "n_clicks"),
+    Input("batch-refresh", "n_intervals"),
     State("batch-upload", "filename"),
+    State("call-type", "value"),
+    State("auto-detect-call-type", "value"),
+    State("batch-workers", "value"),
     prevent_initial_call=True,
 )
-def start_batch(n_clicks: int | None, filenames: list[str] | str | None) -> str:
-    if not n_clicks:
-        return ""
-    if not filenames:
-        return "Select at least one recording first."
-    return "Batch UI is ready. Connect this callback to the existing orchestrator/backend pipeline."
+def batch_controller(
+    contents: list[str] | str | None,
+    n_clicks: int | None,
+    n_intervals: int | None,
+    filenames: list[str] | str | None,
+    call_type: str | None,
+    auto_detect: bool | None,
+    workers: int | None,
+) -> tuple[list[dict[str, str]], str, bool]:
+    """
+    Handle file uploads, batch start, and live queue refresh.
+
+    The actual audio processing happens in a background thread so that
+    the browser can continue receiving queue updates while each recording
+    is processed sequentially.
+    """
+    del n_clicks, n_intervals, workers
+
+    triggered = dash.ctx.triggered_id
+
+    # =========================================================
+    # 1. FILE UPLOAD
+    # =========================================================
+    if triggered == "batch-upload":
+        if not contents or not filenames:
+            return (
+                get_batch_rows(),
+                "",
+                BATCH_STATE["running"],
+            )
+
+        with BATCH_STATE_LOCK:
+            if BATCH_STATE["running"]:
+                return (
+                    get_batch_rows(),
+                    "A batch is already running. Please wait for it to finish.",
+                    True,
+                )
+
+        content_list = (
+            contents
+            if isinstance(contents, list)
+            else [contents]
+        )
+
+        filename_list = (
+            filenames
+            if isinstance(filenames, list)
+            else [filenames]
+        )
+
+        added_jobs: list[dict[str, Any]] = []
+        rejected_files: list[str] = []
+
+        for file_contents, filename in zip(
+            content_list,
+            filename_list,
+        ):
+            try:
+                saved_path = _save_uploaded_audio(
+                    file_contents,
+                    str(filename),
+                )
+
+                added_jobs.append(
+                    {
+                        "job_id": uuid4().hex,
+                        "filename": Path(str(filename)).name,
+                        "saved_path": str(saved_path),
+                        "status": "Queued",
+                        "progress": 0,
+                        "duration": "—",
+                        "duration_seconds": 0.0,
+                        "call_type": call_type or "Customer Support",
+                        "auto_detect": bool(auto_detect),
+                    }
+                )
+
+            except (OSError, ValueError) as exc:
+                rejected_files.append(
+                    f"{Path(str(filename)).name}: {exc}"
+                )
+
+        with BATCH_STATE_LOCK:
+            BATCH_STATE["jobs"].extend(added_jobs)
+
+            if added_jobs and rejected_files:
+                BATCH_STATE["message"] = (
+                    f"{len(added_jobs)} recording(s) added to the queue. "
+                    f"Rejected: {'; '.join(rejected_files)}"
+                )
+            elif added_jobs:
+                BATCH_STATE["message"] = (
+                    f"{len(added_jobs)} recording(s) added to the queue. "
+                    "Processing will remain strictly sequential."
+                )
+            elif rejected_files:
+                BATCH_STATE["message"] = (
+                    "No recordings were added. "
+                    f"Rejected: {'; '.join(rejected_files)}"
+                )
+            else:
+                BATCH_STATE["message"] = "No recordings were added."
+
+            running = bool(BATCH_STATE["running"])
+            message = str(BATCH_STATE["message"])
+
+        return (
+            get_batch_rows(),
+            message,
+            running,
+        )
+
+    # =========================================================
+    # 2. START BATCH
+    # =========================================================
+    if triggered == "start-batch":
+        with BATCH_STATE_LOCK:
+            if BATCH_STATE["running"]:
+                return (
+                    get_batch_rows(),
+                    "Batch processing is already running.",
+                    True,
+                )
+
+            queued_jobs = [
+                job
+                for job in BATCH_STATE["jobs"]
+                if job.get("status") == "Queued"
+            ]
+
+            if not queued_jobs:
+                message = "Select at least one queued recording first."
+                BATCH_STATE["message"] = message
+                return (
+                    get_batch_rows(),
+                    message,
+                    False,
+                )
+
+            BATCH_STATE["running"] = True
+            BATCH_STATE["message"] = (
+                f"Batch processing started for {len(queued_jobs)} recording(s). "
+                "One recording will be processed at a time."
+            )
+            message = str(BATCH_STATE["message"])
+
+        _start_batch_thread()
+
+        return (
+            get_batch_rows(),
+            message,
+            True,
+        )
+
+    # =========================================================
+    # 3. PERIODIC UI REFRESH
+    # =========================================================
+    with BATCH_STATE_LOCK:
+        message = str(BATCH_STATE["message"])
+        running = bool(BATCH_STATE["running"])
+
+    return (
+        get_batch_rows(),
+        message,
+        running,
+    )
 
 
 @app.callback(
@@ -1114,6 +1742,14 @@ def test_connection(n_clicks: int | None) -> str:
         return ""
     return "Connection test UI is ready."
 
+def open_browser() -> None:
+    webbrowser.open_new("http://127.0.0.1:8050/")
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    Timer(1, open_browser).start()
+
+    host = os.getenv("DASH_HOST", "127.0.0.1")
+    port = int(os.getenv("DASH_PORT", "8050"))
+    debug = os.getenv("DASH_DEBUG", "false").lower() == "true"
+    app.run(host=host, port=port, debug=debug)

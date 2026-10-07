@@ -77,8 +77,8 @@ def build_transcript_index(transcript_path:str):
 
 
 if __name__ =="__main__":
-    # transcript_path =input("enter transcript path : ") 
-    transcript_path ="transcripts/recording_3.txt" 
+    transcript_path =input("enter transcript path : ") 
+    # transcript_path ="transcripts/recording_3.txt" 
 
     if not Path(transcript_path).exists():
         logger.error("transcript file not found: %s" ,transcript_path) 

@@ -3,3 +3,11 @@ python-dotenv
 sentence-transformers
 faiss-cpu
 openai
+dash>=2.18
+ dash-bootstrap-components>=1.6
+ plotly>=5.24
+av<19
+langchain-core 
+python-dotenv
+langchain-groq
+langchain-nvidia-ai-endpoints
